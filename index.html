@@ -1,0 +1,1949 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎡 Roda Roda Gila + Suara</title>
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px;
+}
+
+.container {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255,255,255,0.15);
+  border-radius: 20px;
+  padding: 24px 14px;
+  max-width: 560px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+h1 {
+  color: #ffd700;
+  font-size: 1.7em;
+  margin-bottom: 8px;
+  text-shadow: 0 0 20px rgba(255,215,0,0.4);
+}
+
+.subtitle {
+  color: #aaa;
+  font-size: 0.85em;
+  margin-bottom: 15px;
+}
+
+.counter {
+  background: rgba(255,215,0,0.15);
+  border: 2px solid #ffd700;
+  border-radius: 10px;
+  padding: 8px 15px;
+  display: inline-block;
+  margin-bottom: 15px;
+  font-weight: bold;
+}
+
+.counter span {
+  color: #ffd700;
+  font-size: 1.3em;
+}
+
+/* ==============================
+   WHEEL
+============================== */
+
+.wheel-wrapper {
+  --ukuran: min(340px, calc(100vw - 110px));
+  position: relative;
+  width: var(--ukuran);
+  height: var(--ukuran);
+  margin: 22px auto;
+}
+
+/* ==============================
+   POINTER
+============================== */
+
+.pointer {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.7));
+}
+
+.pin-cap {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 35% 30%,
+    #fff3b0,
+    #ffd700 50%,
+    #b8860b
+  );
+  border: 2px solid #fff;
+}
+
+.pin-tip {
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 26px solid #ffd700;
+  margin-top: -4px;
+}
+
+.pointer.bounce {
+  animation: pinBounce 0.6s ease;
+}
+
+@keyframes pinBounce {
+  0% {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  30% {
+    transform: translateX(-50%) translateY(8px);
+  }
+
+  60% {
+    transform: translateX(-50%) translateY(-4px);
+  }
+
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* ==============================
+   CANVAS
+============================== */
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 8px #1a1a2e,
+    0 0 0 12px #ffd700,
+    0 15px 40px rgba(0,0,0,0.6);
+
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ==============================
+   TIMER
+============================== */
+
+.timer {
+  color: #bbb;
+  font-size: 0.9em;
+  min-height: 1.2em;
+  margin-bottom: 4px;
+}
+
+/* ==============================
+   RESULT
+============================== */
+
+.result {
+  font-size: 1.2em;
+  margin: 12px 0 18px;
+  min-height: 1.5em;
+  color: #ffd700;
+  font-weight: bold;
+}
+
+.result span {
+  display: inline-block;
+  position: relative;
+  font-size: 2.2em;
+  background: rgba(255,215,0,0.15);
+  border: 2px solid #ffd700;
+  border-radius: 12px;
+  padding: 5px 25px;
+  animation: pop 0.5s;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ==============================
+   HASIL ANGKA BESAR
+============================== */
+
+.result span.besar {
+  background: linear-gradient(
+    135deg,
+    rgba(255,215,0,0.35),
+    rgba(255,150,0,0.2)
+  );
+
+  border-color: #ffec8a;
+
+  animation:
+    popBesar 0.7s cubic-bezier(0.2, 1.6, 0.4, 1),
+    glowPulse 1.3s ease-in-out 0.7s infinite alternate;
+}
+
+.result span.besar::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border: 3px solid #ffd700;
+  border-radius: 14px;
+  opacity: 0;
+  animation: burst 0.8s ease-out 0.15s;
+}
+
+@keyframes popBesar {
+  0% {
+    transform: scale(0.2) rotate(-15deg);
+    opacity: 0;
+  }
+
+  60% {
+    transform: scale(1.35) rotate(5deg);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes glowPulse {
+  from {
+    box-shadow: 0 0 12px rgba(255,215,0,0.5);
+  }
+
+  to {
+    box-shadow: 0 0 40px rgba(255,215,0,0.95);
+  }
+}
+
+@keyframes burst {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.9;
+  }
+
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+
+/* ==============================
+   BUTTON
+============================== */
+
+button {
+  padding: 15px 40px;
+  font-size: 1.1em;
+  font-weight: bold;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: inherit;
+
+  background: linear-gradient(135deg, #ffd700, #ff9500);
+  color: #1a1a2e;
+
+  box-shadow: 0 6px 20px rgba(255,215,0,0.4);
+  transition: all 0.2s;
+
+  margin: 0 5px;
+  touch-action: manipulation;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(255,215,0,0.6);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#spinBtn {
+  font-size: 1.5em;
+  padding: 18px 70px;
+  display: block;
+  margin: 0 auto 14px;
+}
+
+#resetBtn,
+#muteBtn {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.3);
+  box-shadow: none;
+  padding: 15px 20px;
+}
+
+#resetBtn:hover,
+#muteBtn:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+/* ==============================
+   HISTORY
+============================== */
+
+.history {
+  margin-top: 18px;
+  font-size: 0.85em;
+  color: #888;
+  min-height: 1.5em;
+}
+
+.history strong {
+  color: #ffd700;
+}
+
+/* ==============================
+   MOBILE
+============================== */
+
+@media (max-width: 420px) {
+
+  h1 {
+    font-size: 1.35em;
+  }
+
+  .subtitle {
+    font-size: 0.78em;
+  }
+
+  .counter {
+    padding: 6px 10px;
+    font-size: 0.9em;
+  }
+
+  #spinBtn {
+    font-size: 1.25em;
+    padding: 14px 48px;
+  }
+
+  button {
+    padding: 12px 16px;
+    font-size: 1em;
+    margin: 0 3px;
+  }
+
+  #resetBtn,
+  #muteBtn {
+    padding: 12px 16px;
+  }
+
+  .result span {
+    font-size: 1.8em;
+    padding: 5px 18px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>🎡 Roda Roda Gila</h1>
+
+  <p class="subtitle">
+    Menangkan Perkalian dari Pasangan Anda
+  </p>
+
+  <div class="counter">
+    Putaran ke-<span id="counter">1</span> / 60
+  </div>
+
+  <div class="wheel-wrapper">
+
+    <div class="pointer" id="pointer">
+
+      <div class="pin-cap"></div>
+
+      <div class="pin-tip"></div>
+
+    </div>
+
+    <canvas
+      id="wheel"
+      width="680"
+      height="680">
+    </canvas>
+
+  </div>
+
+  <div
+    class="timer"
+    id="timer">
+  </div>
+
+  <div
+    class="result"
+    id="result">
+    Tekan tombol (atau klik rodanya) 🎯
+  </div>
+
+  <button
+    id="spinBtn"
+    onclick="spin()">
+    🎡 PUTAR
+  </button>
+
+  <button
+    id="resetBtn"
+    onclick="resetGame()">
+    🔄
+  </button>
+
+  <button
+    id="muteBtn"
+    onclick="toggleMute()">
+    🔊
+  </button>
+
+  <div
+    class="history"
+    id="history">
+  </div>
+
+</div>
+
+<script>
+
+/* =========================================================
+   DURASI PUTARAN
+========================================================= */
+
+const DURASI_PUTARAN = 45000;
+
+
+/* =========================================================
+   AMBANG ANGKA BESAR
+========================================================= */
+
+const AMBANG_ANGKA_BESAR = 8;
+
+
+/* =========================================================
+   AUDIO ENGINE
+========================================================= */
+
+let audioCtx = null;
+let muted = false;
+
+
+function initAudio() {
+
+  if (!audioCtx) {
+
+    audioCtx = new (
+      window.AudioContext ||
+      window.webkitAudioContext
+    )();
+
+  }
+
+  if (audioCtx.state === 'suspended') {
+
+    audioCtx.resume();
+
+  }
+
+}
+
+
+function playTone(
+  freq,
+  duration,
+  type = 'sine',
+  volume = 0.15,
+  delay = 0
+) {
+
+  if (muted) return;
+
+  initAudio();
+
+  const osc =
+    audioCtx.createOscillator();
+
+  const gain =
+    audioCtx.createGain();
+
+  osc.type = type;
+
+  osc.frequency.value = freq;
+
+  osc.connect(gain);
+
+  gain.connect(audioCtx.destination);
+
+  const startTime =
+    audioCtx.currentTime + delay;
+
+  gain.gain.setValueAtTime(
+    0,
+    startTime
+  );
+
+  gain.gain.linearRampToValueAtTime(
+    volume,
+    startTime + 0.01
+  );
+
+  gain.gain.exponentialRampToValueAtTime(
+    0.001,
+    startTime + duration
+  );
+
+  osc.start(startTime);
+
+  osc.stop(
+    startTime + duration
+  );
+}
+
+
+function playTick() {
+
+  playTone(
+    1200,
+    0.03,
+    'square',
+    0.08
+  );
+
+}
+
+
+function playClick() {
+
+  playTone(
+    600,
+    0.05,
+    'triangle',
+    0.15
+  );
+
+}
+
+
+function playDing() {
+
+  playTone(
+    880,
+    0.3,
+    'sine',
+    0.2
+  );
+
+  playTone(
+    1320,
+    0.4,
+    'sine',
+    0.15,
+    0.05
+  );
+
+}
+
+
+function playFanfare() {
+
+  const notes = [
+    523,
+    659,
+    784,
+    1047
+  ];
+
+  notes.forEach(
+    (f, i) => {
+
+      playTone(
+        f,
+        0.25,
+        'triangle',
+        0.22,
+        i * 0.12
+      );
+
+    }
+  );
+
+}
+
+
+function playJackpot() {
+
+  const notes = [
+    523,
+    659,
+    784,
+    1047,
+    1319,
+    1568
+  ];
+
+  notes.forEach(
+    (f, i) => {
+
+      playTone(
+        f,
+        0.35,
+        'triangle',
+        0.25,
+        i * 0.13
+      );
+
+      playTone(
+        f / 2,
+        0.35,
+        'sine',
+        0.12,
+        i * 0.13
+      );
+
+    }
+  );
+
+  setTimeout(
+    () => {
+
+      playTone(
+        1047,
+        1.2,
+        'sine',
+        0.25
+      );
+
+      playTone(
+        1319,
+        1.2,
+        'sine',
+        0.2
+      );
+
+      playTone(
+        1568,
+        1.2,
+        'sine',
+        0.18
+      );
+
+    },
+    900
+  );
+
+}
+
+
+/* =========================================================
+   SUARA TIK RODA
+========================================================= */
+
+let tickTimer = null;
+
+
+function startWheelTicks(duration) {
+
+  if (tickTimer) {
+
+    clearTimeout(tickTimer);
+
+  }
+
+  const startTime =
+    Date.now();
+
+
+  const tick = () => {
+
+    const elapsed =
+      Date.now() - startTime;
+
+    if (elapsed > duration) {
+
+      tickTimer = null;
+
+      return;
+
+    }
+
+    playTick();
+
+    const progress =
+      elapsed / duration;
+
+    const interval =
+      50 +
+      progress *
+      progress *
+      550;
+
+    tickTimer =
+      setTimeout(
+        tick,
+        interval
+      );
+
+  };
+
+
+  tick();
+
+}
+
+
+function stopWheelTicks() {
+
+  if (tickTimer) {
+
+    clearTimeout(tickTimer);
+
+    tickTimer = null;
+
+  }
+
+}
+
+
+function toggleMute() {
+
+  muted = !muted;
+
+  document.getElementById(
+    'muteBtn'
+  ).textContent =
+    muted ? '🔇' : '🔊';
+
+}
+
+
+/* =========================================================
+   KONFIGURASI PERMAINAN
+========================================================= */
+
+const RUAS_RANDOM = [
+
+  {
+    angka: 1,
+    jumlah: 12
+  },
+
+  {
+    angka: 2,
+    jumlah: 8
+  },
+
+  {
+    angka: 5,
+    jumlah: 6
+  },
+
+  {
+    angka: 8,
+    jumlah: 4
+  },
+
+  {
+    angka: 20,
+    jumlah: 2
+  },
+
+  {
+    angka: 30,
+    jumlah: 1
+  }
+
+];
+
+
+/* =========================================================
+   JADWAL KHUSUS
+========================================================= */
+
+const JADWAL = {
+
+  17: 10,
+
+  28: 15,
+
+  60: 40
+
+};
+
+
+const TOTAL_PUTARAN = 60;
+
+
+/* =========================================================
+   MEMBUAT SLICES RODA
+========================================================= */
+
+const SLICES = [];
+
+
+RUAS_RANDOM.forEach(
+  item => {
+
+    for (
+      let i = 0;
+      i < item.jumlah;
+      i++
+    ) {
+
+      SLICES.push(
+        item.angka
+      );
+
+    }
+
+  }
+);
+
+
+/*
+  Tambahkan angka khusus
+*/
+
+[
+  10,
+  15,
+  40
+].forEach(
+  a => SLICES.push(a)
+);
+
+
+/* =========================================================
+   SHUFFLE
+========================================================= */
+
+function shuffle(arr) {
+
+  for (
+    let i = arr.length - 1;
+    i > 0;
+    i--
+  ) {
+
+    const j =
+      Math.floor(
+        Math.random() *
+        (i + 1)
+      );
+
+    [
+      arr[i],
+      arr[j]
+    ] = [
+      arr[j],
+      arr[i]
+    ];
+
+  }
+
+  return arr;
+}
+
+
+shuffle(SLICES);
+
+
+/* =========================================================
+   WARNA ANGKA
+========================================================= */
+
+function getColor(angka) {
+
+  const min = 1;
+
+  const max = 40;
+
+  const t =
+    (angka - min) /
+    (max - min);
+
+  const hue =
+    10 + t * 200;
+
+  return `hsl(${hue}, 70%, 55%)`;
+
+}
+
+
+/* =========================================================
+   CANVAS
+========================================================= */
+
+const canvas =
+  document.getElementById(
+    'wheel'
+  );
+
+const ctx =
+  canvas.getContext('2d');
+
+const size =
+  canvas.width;
+
+const center =
+  size / 2;
+
+const radius =
+  center - 10;
+
+const sliceAngle =
+  (Math.PI * 2) /
+  SLICES.length;
+
+
+/* =========================================================
+   STATE GAME
+========================================================= */
+
+let currentRotation = 0;
+
+let spinning = false;
+
+let historyList = [];
+
+let putaranKe = 1;
+
+let spinTimeout = null;
+
+let countdownInterval = null;
+
+let highlightIndex = -1;
+
+
+/* =========================================================
+   POLA KHUSUS ANGKA 1
+=========================================================
+
+   Aturan:
+
+   1
+   1
+   1
+   1
+   ↓
+   2
+   ↓
+   1
+   ↓
+   RANDOM
+========================================================= */
+
+let jumlahAngka1Berturut = 0;
+
+let paksaAngka2 = false;
+
+let paksaAngka1Setelah2 = false;
+
+
+/* =========================================================
+   PILIH ANGKA
+========================================================= */
+
+function pilihAngka() {
+
+
+  /* -------------------------------------------------------
+     PRIORITAS 1
+     Setelah angka 1 keluar 4x berturut-turut,
+     angka berikutnya wajib 2.
+  ------------------------------------------------------- */
+
+  if (paksaAngka2) {
+
+    paksaAngka2 = false;
+
+    paksaAngka1Setelah2 = true;
+
+    return 2;
+
+  }
+
+
+  /* -------------------------------------------------------
+     PRIORITAS 2
+     Setelah angka 2 dari pola tersebut,
+     angka berikutnya wajib 1.
+  ------------------------------------------------------- */
+
+  if (paksaAngka1Setelah2) {
+
+    paksaAngka1Setelah2 = false;
+
+    jumlahAngka1Berturut = 1;
+
+    return 1;
+
+  }
+
+
+  /* -------------------------------------------------------
+     JADWAL KHUSUS
+  ------------------------------------------------------- */
+
+  if (
+    JADWAL[putaranKe] !== undefined
+  ) {
+
+    return JADWAL[putaranKe];
+
+  }
+
+
+  /* -------------------------------------------------------
+     RANDOM SESUAI BOBOT
+  ------------------------------------------------------- */
+
+  const pool = [];
+
+
+  RUAS_RANDOM.forEach(
+    item => {
+
+      for (
+        let i = 0;
+        i < item.jumlah;
+        i++
+      ) {
+
+        pool.push(
+          item.angka
+        );
+
+      }
+
+    }
+  );
+
+
+  return pool[
+    Math.floor(
+      Math.random() *
+      pool.length
+    )
+  ];
+
+}
+
+
+/* =========================================================
+   CARI INDEX ANGKA PADA RODA
+========================================================= */
+
+function cariIndexUntukAngka(
+  angkaTarget
+) {
+
+  const kandidat = [];
+
+
+  SLICES.forEach(
+    (a, i) => {
+
+      if (
+        a === angkaTarget
+      ) {
+
+        kandidat.push(i);
+
+      }
+
+    }
+  );
+
+
+  return kandidat[
+    Math.floor(
+      Math.random() *
+      kandidat.length
+    )
+  ];
+
+}
+
+
+/* =========================================================
+   GAMBAR RODA
+========================================================= */
+
+function drawWheel() {
+
+  ctx.clearRect(
+    0,
+    0,
+    size,
+    size
+  );
+
+
+  SLICES.forEach(
+    (angka, i) => {
+
+      const startAngle =
+        i * sliceAngle;
+
+      const endAngle =
+        startAngle +
+        sliceAngle;
+
+
+      ctx.beginPath();
+
+      ctx.moveTo(
+        center,
+        center
+      );
+
+      ctx.arc(
+        center,
+        center,
+        radius,
+        startAngle,
+        endAngle
+      );
+
+      ctx.closePath();
+
+      ctx.fillStyle =
+        getColor(angka);
+
+      ctx.fill();
+
+
+      ctx.strokeStyle =
+        'rgba(255,255,255,0.6)';
+
+      ctx.lineWidth = 1.5;
+
+      ctx.stroke();
+
+
+      ctx.save();
+
+
+      ctx.translate(
+        center,
+        center
+      );
+
+      ctx.rotate(
+        startAngle +
+        sliceAngle / 2
+      );
+
+      ctx.textAlign =
+        'right';
+
+      ctx.fillStyle =
+        '#fff';
+
+      ctx.shadowColor =
+        'rgba(0,0,0,0.7)';
+
+      ctx.shadowBlur = 5;
+
+
+      const fontSize =
+        sliceAngle * radius > 40
+          ? 30
+          : 20;
+
+
+      ctx.font =
+        `bold ${fontSize}px Segoe UI`;
+
+
+      ctx.fillText(
+        angka,
+        radius - 20,
+        10
+      );
+
+
+      ctx.restore();
+
+    }
+  );
+
+
+  /* =======================================================
+     HIGHLIGHT PEMENANG
+  ======================================================= */
+
+  if (
+    highlightIndex >= 0
+  ) {
+
+    const startAngle =
+      highlightIndex *
+      sliceAngle;
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      center,
+      center
+    );
+
+    ctx.arc(
+      center,
+      center,
+      radius - 4,
+      startAngle,
+      startAngle +
+      sliceAngle
+    );
+
+    ctx.closePath();
+
+
+    ctx.fillStyle =
+      'rgba(255,255,255,0.22)';
+
+    ctx.fill();
+
+
+    ctx.strokeStyle =
+      '#ffd700';
+
+    ctx.lineWidth = 7;
+
+    ctx.shadowColor =
+      '#ffd700';
+
+    ctx.shadowBlur = 30;
+
+    ctx.stroke();
+
+    ctx.shadowBlur = 0;
+
+  }
+
+
+  /* =======================================================
+     TENGAH RODA
+  ======================================================= */
+
+  ctx.beginPath();
+
+  ctx.arc(
+    center,
+    center,
+    42,
+    0,
+    Math.PI * 2
+  );
+
+  ctx.fillStyle =
+    '#1a1a2e';
+
+  ctx.fill();
+
+  ctx.strokeStyle =
+    '#ffd700';
+
+  ctx.lineWidth = 5;
+
+  ctx.stroke();
+
+}
+
+
+/* =========================================================
+   BEKUKAN RODA
+========================================================= */
+
+function freezeWheel() {
+
+  const m =
+    getComputedStyle(
+      canvas
+    ).transform;
+
+
+  if (
+    m &&
+    m !== 'none'
+  ) {
+
+    const match =
+      m.match(
+        /^matrix\((.+)\)$/
+      );
+
+
+    if (match) {
+
+      const vals =
+        match[1]
+          .split(',')
+          .map(parseFloat);
+
+
+      currentRotation =
+        Math.atan2(
+          vals[1],
+          vals[0]
+        );
+
+    }
+
+  }
+
+
+  canvas.style.transition =
+    'none';
+
+  canvas.style.transform =
+    `rotate(${currentRotation}rad)`;
+
+}
+
+
+/* =========================================================
+   ANIMASI POINTER
+========================================================= */
+
+function bouncePointer() {
+
+  const pointerEl =
+    document.getElementById(
+      'pointer'
+    );
+
+
+  pointerEl.classList.remove(
+    'bounce'
+  );
+
+
+  void pointerEl.offsetWidth;
+
+
+  pointerEl.classList.add(
+    'bounce'
+  );
+
+}
+
+
+/* =========================================================
+   SPIN
+========================================================= */
+
+function spin() {
+
+  if (spinning) return;
+
+
+  spinning = true;
+
+
+  playClick();
+
+
+  document.getElementById(
+    'spinBtn'
+  ).disabled = true;
+
+
+  document.getElementById(
+    'result'
+  ).textContent =
+    `Memutar... 🌀 (${DURASI_PUTARAN / 1000} detik)`;
+
+
+  highlightIndex = -1;
+
+
+  drawWheel();
+
+
+  /* =======================================================
+     TENTUKAN HASIL
+  ======================================================= */
+
+  const angkaHasil =
+    pilihAngka();
+
+
+  /* =======================================================
+     UPDATE POLA ANGKA 1
+  ======================================================= */
+
+  if (
+    angkaHasil === 1
+  ) {
+
+    jumlahAngka1Berturut++;
+
+
+    /*
+      Jika angka 1 sudah keluar
+      empat kali berturut-turut,
+      putaran berikutnya dipaksa 2.
+    */
+
+    if (
+      jumlahAngka1Berturut >= 4
+    ) {
+
+      paksaAngka2 = true;
+
+      jumlahAngka1Berturut = 0;
+
+    }
+
+  } else {
+
+    /*
+      Angka selain 1 memutus
+      rangkaian angka 1.
+    */
+
+    jumlahAngka1Berturut = 0;
+
+  }
+
+
+  /* =======================================================
+     CARI POSISI ANGKA
+  ======================================================= */
+
+  const targetIndex =
+    cariIndexUntukAngka(
+      angkaHasil
+    );
+
+
+  const pointerAngle =
+    -Math.PI / 2;
+
+
+  const targetSliceCenter =
+    targetIndex *
+    sliceAngle +
+    sliceAngle / 2;
+
+
+  const baseRotation =
+    pointerAngle -
+    targetSliceCenter;
+
+
+  /* =======================================================
+     JUMLAH PUTARAN TAMBAHAN
+  ======================================================= */
+
+  const extraSpins =
+    3 +
+    Math.floor(
+      Math.random() * 3
+    );
+
+
+  const totalRotation =
+    extraSpins *
+    Math.PI *
+    2 +
+    baseRotation;
+
+
+  const normalizedCurrent =
+    (
+      (
+        currentRotation %
+        (Math.PI * 2)
+      ) +
+      Math.PI * 2
+    ) %
+    (Math.PI * 2);
+
+
+  const normalizedTarget =
+    (
+      (
+        totalRotation %
+        (Math.PI * 2)
+      ) +
+      Math.PI * 2
+    ) %
+    (Math.PI * 2);
+
+
+  let delta =
+    normalizedTarget -
+    normalizedCurrent;
+
+
+  if (delta < 0) {
+
+    delta +=
+      Math.PI * 2;
+
+  }
+
+
+  currentRotation +=
+    extraSpins *
+    Math.PI *
+    2 +
+    delta;
+
+
+  /* =======================================================
+     SUARA TIK
+  ======================================================= */
+
+  startWheelTicks(
+    DURASI_PUTARAN
+  );
+
+
+  /* =======================================================
+     ANIMASI RODA
+  ======================================================= */
+
+  canvas.style.transition =
+    `transform ${
+      DURASI_PUTARAN / 1000
+    }s cubic-bezier(
+      0.15,
+      0.55,
+      0.1,
+      1
+    )`;
+
+
+  void canvas.offsetWidth;
+
+
+  canvas.style.transform =
+    `rotate(${currentRotation}rad)`;
+
+
+  /* =======================================================
+     COUNTDOWN
+  ======================================================= */
+
+  const timerEl =
+    document.getElementById(
+      'timer'
+    );
+
+
+  const t0 =
+    Date.now();
+
+
+  countdownInterval =
+    setInterval(
+      () => {
+
+        const sisa =
+          Math.max(
+            0,
+            Math.ceil(
+              (
+                DURASI_PUTARAN -
+                (
+                  Date.now() -
+                  t0
+                )
+              ) / 1000
+            )
+          );
+
+
+        timerEl.textContent =
+          sisa > 0
+            ? `⏳ ${sisa} detik lagi...`
+            : '';
+
+
+        if (
+          sisa <= 0 &&
+          countdownInterval
+        ) {
+
+          clearInterval(
+            countdownInterval
+          );
+
+          countdownInterval = null;
+
+        }
+
+      },
+      250
+    );
+
+
+  /* =======================================================
+     SELESAI PUTAR
+  ======================================================= */
+
+  spinTimeout =
+    setTimeout(
+      () => {
+
+        spinTimeout = null;
+
+
+        stopWheelTicks();
+
+
+        if (
+          countdownInterval
+        ) {
+
+          clearInterval(
+            countdownInterval
+          );
+
+          countdownInterval = null;
+
+        }
+
+
+        timerEl.textContent =
+          '';
+
+
+        highlightIndex =
+          targetIndex;
+
+
+        drawWheel();
+
+
+        bouncePointer();
+
+
+        const resultEl =
+          document.getElementById(
+            'result'
+          );
+
+
+        let label = '';
+
+
+        if (
+          JADWAL[putaranKe] !==
+          undefined
+        ) {
+
+          label =
+            ' 🎯 (jadwal khusus!)';
+
+        }
+
+
+        /* =================================================
+           ANIMASI ANGKA BESAR
+        ================================================= */
+
+        const kelasBesar =
+          angkaHasil >
+          AMBANG_ANGKA_BESAR
+            ? 'besar'
+            : '';
+
+
+        resultEl.innerHTML =
+          `Hasilnya: <span class="${kelasBesar}">
+            ${angkaHasil}
+          </span>${label}`;
+
+
+        /* =================================================
+           SUARA HASIL
+        ================================================= */
+
+        if (
+          angkaHasil === 40
+        ) {
+
+          setTimeout(
+            playJackpot,
+            200
+          );
+
+        } else if (
+          angkaHasil === 10 ||
+          angkaHasil === 15
+        ) {
+
+          setTimeout(
+            playFanfare,
+            200
+          );
+
+        } else {
+
+          playDing();
+
+        }
+
+
+        /* =================================================
+           HISTORY
+        ================================================= */
+
+        historyList.unshift(
+          angkaHasil
+        );
+
+
+        if (
+          historyList.length > 8
+        ) {
+
+          historyList.pop();
+
+        }
+
+
+        document.getElementById(
+          'history'
+        ).innerHTML =
+          'Riwayat: ' +
+          historyList
+            .map(
+              n =>
+                `<strong>${n}</strong>`
+            )
+            .join(' → ');
+
+
+        /* =================================================
+           PUTARAN BERIKUTNYA
+        ================================================= */
+
+        putaranKe++;
+
+
+        if (
+          putaranKe >
+          TOTAL_PUTARAN
+        ) {
+
+          putaranKe = 1;
+
+        }
+
+
+        document.getElementById(
+          'counter'
+        ).textContent =
+          putaranKe;
+
+
+        spinning = false;
+
+
+        document.getElementById(
+          'spinBtn'
+        ).disabled = false;
+
+      },
+
+      DURASI_PUTARAN + 500
+
+    );
+
+}
+
+
+/* =========================================================
+   RESET GAME
+========================================================= */
+
+function resetGame() {
+
+  playClick();
+
+
+  if (spinTimeout) {
+
+    clearTimeout(
+      spinTimeout
+    );
+
+    spinTimeout = null;
+
+  }
+
+
+  stopWheelTicks();
+
+
+  if (
+    countdownInterval
+  ) {
+
+    clearInterval(
+      countdownInterval
+    );
+
+    countdownInterval = null;
+
+  }
+
+
+  document.getElementById(
+    'timer'
+  ).textContent = '';
+
+
+  freezeWheel();
+
+
+  highlightIndex = -1;
+
+
+  drawWheel();
+
+
+  document.getElementById(
+    'pointer'
+  ).classList.remove(
+    'bounce'
+  );
+
+
+  /* =======================================================
+     RESET POLA ANGKA 1
+  ======================================================= */
+
+  jumlahAngka1Berturut = 0;
+
+  paksaAngka2 = false;
+
+  paksaAngka1Setelah2 = false;
+
+
+  /* =======================================================
+     RESET GAME
+  ======================================================= */
+
+  putaranKe = 1;
+
+  historyList = [];
+
+
+  document.getElementById(
+    'counter'
+  ).textContent = '1';
+
+
+  document.getElementById(
+    'history'
+  ).innerHTML = '';
+
+
+  document.getElementById(
+    'result'
+  ).textContent =
+    'Game direset! Tekan PUTAR untuk mulai 🎯';
+
+
+  spinning = false;
+
+
+  document.getElementById(
+    'spinBtn'
+  ).disabled = false;
+
+}
+
+
+/* =========================================================
+   KLIK RODA
+========================================================= */
+
+canvas.addEventListener(
+  'click',
+  () => {
+
+    if (!spinning) {
+
+      spin();
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   GAMBAR AWAL
+========================================================= */
+
+drawWheel();
+
+
+/* =========================================================
+   AKTIFKAN AUDIO SETELAH INTERAKSI
+========================================================= */
+
+document.body.addEventListener(
+  'click',
+  initAudio,
+  {
+    once: true
+  }
+);
+
+</script>
+
+</body>
+  </html>
